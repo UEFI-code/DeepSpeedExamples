@@ -31,10 +31,16 @@ def chat():
 
     # Let's play!
 
-    response = chatbot.get_model_response(generator, data['prompt'], args.max_new_tokens)
+    prompt_to_gpt = f"Human: {data['prompt']}\n Assistant: "
+
+    response = chatbot.get_model_response(generator, prompt_to_gpt, args.max_new_tokens)
     response = response[0]["generated_text"].replace("<|endoftext|></s>", "")
-    print(response)
-    response = input('Put your patched response here: ')
+    response = response.split(prompt_to_gpt)[1].strip() # remove prompt header (Sounds stupid)
+    print(f'Stage 1 response: {response}')
+    response = response.split('Human: ')[0].strip() # remove illusion
+    print(f'Stage 2 response: {response}')
+
+    #response = input('Put your patched response here: ')
     response = {'status': 'OK', 'message': response}
     return response, 200
 
