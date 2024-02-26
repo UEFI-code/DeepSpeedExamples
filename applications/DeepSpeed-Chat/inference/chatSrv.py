@@ -1,5 +1,5 @@
 import chatbot
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template
 import json
 from flask_cors import CORS
 
@@ -7,6 +7,10 @@ app = Flask(__name__)
 CORS(app)
 
 json_encoder = json.JSONEncoder()
+
+@app.route('/')
+def home():
+    return render_template('playground.html')
 
 @app.route('/chat_test', methods=['POST'])
 def chat_test():

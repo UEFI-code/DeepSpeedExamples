@@ -1,0 +1,319 @@
+<!DOCTYPE html>  
+<html>
+<head>  
+    <title>Mini ChatGPT</title>  
+    <meta http-equiv="Content-Type" content="text/html; charset=gb2312">  
+    <style>  
+        body {  
+            font-family: Arial, sans-serif;  
+            margin: 0;  
+            padding: 0;  
+            background-color: #f1f1f1;  
+        }  
+  
+        h1 {  
+            background-color: #fd66e4;  
+            color: white;  
+            text-align: center;  
+            padding: 20px;  
+        }  
+  
+        #chat-container {  
+            display: flex;  
+            flex-direction: column;  
+            align-items: center;  
+            justify-content: center;  
+            margin-top: 20px;  
+            padding: 20px;  
+            background-color: white;  
+            border-radius: 5px;  
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
+            max-width: 600px;  
+            margin-left: auto;  
+            margin-right: auto;  
+        }
+
+        #chat-container p {  
+            font-size: 14px;  
+            margin: 0;  
+            padding: 0;  
+            line-height: 1.5;  
+        }
+  
+        #chat-history {  
+            width: 100%;  
+            height: 380px;  
+            border: 1px solid #ccc;  
+            border-radius: 5px;  
+            padding: 0px;  
+            overflow-y: scroll;  
+            margin-bottom: 0px;  
+        }  
+  
+        #user-input {  
+            width: 100%;  
+            padding: 10px;  
+            margin: 5px 0;  
+            border: 1px solid #ccc;  
+            border-radius: 5px;  
+        }  
+  
+        #nickname {  
+            width: 100%;  
+            padding: 10px;  
+            margin: 5px 0;  
+            border: 1px solid #ccc;  
+            border-radius: 5px;  
+        }  
+  
+        #submit {  
+            width: 100%;  
+            padding: 10px;  
+            background-color: #4CAF50;  
+            color: white;  
+            border: none;  
+            cursor: pointer;  
+            margin-top: 15px;  
+            border-radius: 5px;  
+        }  
+  
+        #submit:hover {  
+            background-color: #1bc44b;  
+        }  
+  
+        #message button {  
+            background-color: transparent;  
+            border: none;  
+            color: #4CAF50;  
+            cursor: pointer;  
+            font-size: 14px;  
+            margin-left: 5px;  
+            padding: 0;  
+        }  
+  
+        #message button:hover {  
+            color: #45a049;  
+        }  
+  
+        #clear {  
+            width: 100%;  
+            padding: 10px;  
+            background-color: #f44336;  
+            color: white;  
+            border: none;  
+            cursor: pointer;  
+            margin-top: 15px;  
+            border-radius: 5px;  
+        }  
+  
+        #clear:hover {  
+            background-color: #e53935;  
+        }  
+  
+        #model-selector {  
+            width: 100%;  
+            padding: 10px;  
+            margin: 5px 0;  
+            border: 1px solid #ccc;  
+            border-radius: 5px;  
+        }  
+  
+        /* Move the button to the right top */
+        .button-container {  
+            position: absolute;  
+            top: 40px;  
+            right: 20px;  
+        }  
+        
+        .nav-button {  
+            background-color: #129ce1;  
+            border: none;  
+            color: white;  
+            cursor: pointer;  
+            margin: 0 5px;  
+            padding: 10px;  
+            text-align: center;  
+            text-decoration: none;  
+            display: inline-block;  
+            font-size: 16px;  
+            transition-duration: 0.4s;  
+            border-radius: 5px;  
+        }  
+        
+        .nav-button:hover {  
+            background-color: #ecc00f;  
+        }
+
+    </style>  
+  
+    <script> 
+  
+        function saveNickname() {  
+            var nickname = document.getElementById("nickname").value;  
+            if (nickname) {  
+                localStorage.setItem("nickname", nickname);  
+            }  
+        }  
+  
+        function loadNickname() {  
+            var nickname = localStorage.getItem("nickname");  
+            if (nickname) {  
+                document.getElementById("nickname").value = nickname;  
+            }  
+        }  
+  
+        function loadChatHistory() {  
+            var chatHistory = localStorage.getItem("chatHistory");  
+            if (chatHistory) {  
+                document.getElementById("chat-history").innerHTML = chatHistory;  
+            }  
+        }  
+  
+        function saveChatHistory() {  
+            var chatHistory = document.getElementById("chat-history").innerHTML;  
+            localStorage.setItem("chatHistory", chatHistory);  
+        }  
+  
+        function appendMessage(message) {  
+            var chatHistory = document.getElementById("chat-history");  
+            chatHistory.innerHTML += message;  
+            chatHistory.scrollTop = chatHistory.scrollHeight;  
+            saveChatHistory();  
+        }
+
+        function makeChatMessage(nickname, message) {
+            var date = new Date();
+            var time = date.toLocaleString();
+            return '<div class="message"><p><strong>' + time + ' ' + nickname + ':</strong> <span class="message-content">' + message + '</span> <button onclick="copyMessage(this)">Copy</button> <button onclick="editMessage(this)">Edit</button> <button onclick="deleteMessage(this)">Delete</button></p></div>';
+        }
+        
+        function copyMessage(element) {
+            var message = element.parentElement.querySelector(".message-content");
+            var textArea = document.createElement("textarea");
+            textArea.value = message.innerText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("Copy");
+            textArea.remove();
+            // show message copied alert
+            alert("Message copied!");
+        }
+        
+        function editMessage(element) {  
+            var message = element.parentElement.querySelector(".message-content");  
+            var newText = prompt("Edit message:", message.innerText);  
+  
+            if (newText && newText.trim() != "") {  
+                message.innerText = newText;  
+                saveChatHistory();  
+            }  
+        }
+  
+        function deleteMessage(element) {  
+            if (confirm("Are you sure you want to delete this message?")) {  
+                element.parentElement.remove();  
+                saveChatHistory();  
+            }  
+        }  
+  
+        function sendMessage() {
+            // lock the send button
+            document.getElementById("submit").disabled = true;
+            // set the send button color to gray
+            document.getElementById("submit").style.backgroundColor = "#ccc";
+            // set the send button text to "Please Wait Response..."
+            document.getElementById("submit").innerText = "Please Wait Response...";
+            // lock the text input
+            document.getElementById("user-input").disabled = true;
+            var userInput = document.getElementById("user-input").value  
+            if (userInput) {  
+                var nickname = document.getElementById("nickname").value;  
+                saveNickname();
+                // var userMessage = '<div class="message"><p><strong>' + nickname + ':</strong> <span class="message-content">' + userInput + '</span> <button onclick="copyMessage(this)">Copy</button> <button onclick="editMessage(this)">Edit</button> <button onclick="deleteMessage(this)">Delete</button></p></div>';  
+                // appendMessage(userMessage);
+                appendMessage(makeChatMessage(nickname, userInput));
+  
+                document.getElementById("user-input").value = "";
+
+                //var chathistory = document.getElementById("chat-history").innerText.replace(/Copy\sEdit\sDelete/g, "");  
+                //var prompt = "This is a special netural language structure containing chat History and your response. You are a robot girl now. The user nickname is " + nickname + ". Please answer directly without any prefix.\nHistory:\n----------\n" + chathistory + "\n----------\nAI: ";
+                // The Model is not smart enough to understand this!
+
+                var model = getModel();
+                // pack to json
+                var sendData = {
+                    "prompt": userInput,
+                    "model": model
+                };
+                sendData = JSON.stringify(sendData);
+                alert("Debug: " + sendData);
+                // send to backend, http://localhost:5000/chat_test
+                fetch("http://10.1.86.46:5000/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: sendData
+                }).then(response => response.json()).then(response => {
+                    // get the response status
+                    if (response.status == "OK")
+                    {
+                        // get the response message
+                        var message = response.message;
+                        // append the response message
+                        appendMessage(makeChatMessage(model, message));
+                    }
+                    else
+                    {
+                        alert("Error: " + response.message);
+                    }
+                    // unlock the send button
+                    document.getElementById("submit").disabled = false;
+                    // set the send button color to green
+                    document.getElementById("submit").style.backgroundColor = "#4CAF50";
+                    // set the send button text to "Send"
+                    document.getElementById("submit").innerText = "Send";
+                    // unlock the text input
+                    document.getElementById("user-input").disabled = false;
+                });
+
+            }
+
+        }
+        
+        function handleKeyPress(e) {  
+            if (e.keyCode === 13) {  
+                sendMessage();  
+            }  
+        }
+  
+        function clearChatHistory() {  
+            if (confirm("Are you sure you want to clear the chat history?")) {  
+                localStorage.removeItem("chatHistory");  
+                document.getElementById("chat-history").innerHTML = "";  
+            }  
+        }  
+  
+        function getModel() {  
+            var modelSelector = document.getElementById("model-selector");  
+            return modelSelector.options[modelSelector.selectedIndex].value;  
+        }  
+  
+    </script>  
+</head>  
+  
+<body onload="loadNickname(); loadChatHistory();">  
+    <h1>AI Chatbot</h1>
+    <div id="chat-container">  
+        <div id="chat-history"></div>  
+        <input type="text" id="nickname" placeholder="Enter your nickname">  
+        <input type="text" id="user-input" placeholder="Type your message" onkeypress="handleKeyPress(event)">  
+        <select id="model-selector">  
+            <option value="ChatGPT_1.3b">ChatGPT_1.3b</option>  
+        </select>  
+        <button id="submit" onclick="sendMessage()">Send</button>  
+        <button id="clear" onclick="clearChatHistory()">Clear Chat History</button>  
+    </div> 
+</body>  
+  
+</html>  
