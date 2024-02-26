@@ -67,7 +67,9 @@ def get_user_input(user_input):
 
 
 def get_model_response(generator, user_input, max_new_tokens):
+    print(f'Hook model input:\n{user_input}')
     response = generator(user_input, max_new_tokens=max_new_tokens)
+    print(f'Hook model output:\n{response[0]["generated_text"]}')
     return response
 
 
