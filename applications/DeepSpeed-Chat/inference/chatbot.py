@@ -17,6 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path",
                         type=str,
+                        required=True,
                         help="Directory containing trained actor model")
     parser.add_argument(
         "--max_new_tokens",
